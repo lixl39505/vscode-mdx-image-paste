@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        vscode: ['1.105.1', stable]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      VSCODE_VERSION: ${{ matrix.vscode }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.8.2
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm test:unit
+      - run: xvfb-run -a pnpm test:integration
+        if: runner.os == 'Linux'
+      - run: pnpm test:integration
+        if: runner.os != 'Linux'
+      - run: pnpm package
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mdx-image-paste-${{ matrix.os }}-${{ matrix.vscode }}
+          path: artifacts/

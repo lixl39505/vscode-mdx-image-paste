@@ -1,0 +1,43 @@
+{
+  "name": "mdx-image-paste",
+  "displayName": "MDX Image Paste",
+  "description": "Paste images into MDX files using VS Code's native Markdown image settings.",
+  "version": "0.1.0",
+  "publisher": "lixl39505",
+  "license": "MIT",
+  "author": "lixl39505",
+  "repository": { "type": "git", "url": "https://github.com/lixl39505/vscode-mdx-image-paste.git" },
+  "bugs": { "url": "https://github.com/lixl39505/vscode-mdx-image-paste/issues" },
+  "homepage": "https://github.com/lixl39505/vscode-mdx-image-paste#readme",
+  "engines": { "vscode": "^1.105.0" },
+  "categories": ["Other"],
+  "keywords": ["mdx", "markdown", "image", "paste", "clipboard"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["onLanguage:mdx", "onStartupFinished"],
+  "extensionKind": ["workspace"],
+  "capabilities": { "virtualWorkspaces": true, "untrustedWorkspaces": { "supported": true } },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "check": "tsc --noEmit",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "node scripts/build.mjs --tests && node --test dist/test/unit.cjs",
+    "test:integration": "node scripts/build.mjs --tests && node scripts/test.mjs",
+    "vscode:prepublish": "npm run check && npm run build",
+    "package": "vsce package --no-dependencies --out artifacts/",
+    "package:check": "vsce ls --no-dependencies"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.0.0",
+    "@types/picomatch": "^4.0.2",
+    "@types/vscode": "1.105.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.0",
+    "mocha": "^11.0.0",
+    "picomatch": "4.0.3",
+    "typescript": "^5.9.0",
+    "vscode-uri": "3.1.0"
+  }
+}

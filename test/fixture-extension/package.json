@@ -1,0 +1,12 @@
+{
+  "name": "mdx-image-paste-test-languages",
+  "publisher": "test",
+  "version": "0.0.0",
+  "engines": { "vscode": "^1.105.0" },
+  "contributes": {
+    "languages": [
+      { "id": "mdx", "extensions": [".mdx"] },
+      { "id": "alternate-mdx", "extensions": [".alternate-mdx"] }
+    ]
+  }
+}
