@@ -1,10 +1,19 @@
-import { runTests } from '@vscode/test-electron';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { downloadAndUnzipVSCode, runTests } from '@vscode/test-electron';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const executableIndex = process.argv.indexOf('--vscode-executable');
-const executable = executableIndex >= 0 ? process.argv[executableIndex + 1] : process.env.VSCODE_EXECUTABLE_PATH;
+let executable = executableIndex >= 0 ? process.argv[executableIndex + 1] : process.env.VSCODE_EXECUTABLE_PATH;
+if (!executable && process.platform === 'darwin') {
+  const downloaded = await downloadAndUnzipVSCode(process.env.VSCODE_VERSION || '1.105.1');
+  try { await access(downloaded); } catch {
+    const contents = path.resolve(downloaded, '../..');
+    const name = execFileSync('/usr/libexec/PlistBuddy', ['-c', 'Print CFBundleExecutable', path.join(contents, 'Info.plist')], { encoding: 'utf8' }).trim();
+    executable = path.join(contents, 'MacOS', name);
+  }
+}
 const workspace = path.join(root, '.test-workspace');
 await mkdir(path.join(workspace, 'one'), { recursive: true });
 await mkdir(path.join(workspace, 'two'), { recursive: true });

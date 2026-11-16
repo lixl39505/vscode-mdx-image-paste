@@ -23,6 +23,7 @@ let editor: vscode.TextEditor;
 let counter = 0;
 
 const at = (name: string) => vscode.Uri.joinPath(directory, name);
+const comparablePath = (uri: vscode.Uri) => uri.path.replace(/^\/[A-Z]:/, drive => drive.toLowerCase());
 const config = () => vscode.workspace.getConfiguration('markdown', editor.document);
 async function setting(name: string, value: unknown) {
   await config().update(name, value, vscode.ConfigurationTarget.Workspace);
@@ -86,9 +87,9 @@ function suites() {
 
     test('default config and configuration changes are read at each paste', async () => {
       assert.deepEqual(getCopyFileConfiguration(editor.document), { destination: {}, overwriteBehavior: 'nameIncrementally' });
-      assert.equal(desiredDestination(editor.document, 'image.png').path, at('image.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'image.png')), comparablePath(at('image.png')));
       await setting('copyFiles.destination', { '*.*': '${documentBaseName}/${fileName}' });
-      assert.equal(desiredDestination(editor.document, 'image.png').path, at('guide/image.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'image.png')), comparablePath(at('guide/image.png')));
       assert.equal(await paste(), '![alt text](guide/screenshot.png)');
       await bytes(at('guide/screenshot.png'), png);
     });
@@ -112,16 +113,16 @@ function suites() {
     });
     test('glob matches the document, first matching entry wins, unmatched falls back', async () => {
       await setting('copyFiles.destination', { '*.png': 'wrong/', '**/guide.{md,mdx}': 'first/', '*.*': 'second/' });
-      assert.equal(desiredDestination(editor.document, 'input.png').path, at('first/input.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'input.png')), comparablePath(at('first/input.png')));
       await setting('copyFiles.destination', { '**/other.mdx': 'wrong/' });
-      assert.equal(desiredDestination(editor.document, 'input.png').path, at('input.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'input.png')), comparablePath(at('input.png')));
     });
     test('workspace-root globs, dot directories, extglobs and second root', async () => {
       const relative = vscode.workspace.asRelativePath(editor.document.uri, false);
       await setting('copyFiles.destination', { [`/${relative}`]: '/assets/${fileName}' });
-      assert.equal(desiredDestination(editor.document, 'input.png').path, vscode.Uri.joinPath(root, 'assets/input.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'input.png')), comparablePath(vscode.Uri.joinPath(root, 'assets/input.png')));
       await setting('copyFiles.destination', { '**/@(guide|other).mdx': '.assets/${fileName}' });
-      assert.equal(desiredDestination(editor.document, 'input.png').path, at('.assets/input.png').path);
+      assert.equal(comparablePath(desiredDestination(editor.document, 'input.png')), comparablePath(at('.assets/input.png')));
       const second = vscode.workspace.workspaceFolders![1]!.uri;
       const document = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(second, 'second.mdx')).then(undefined, async () => {
         const uri = vscode.Uri.joinPath(second, 'second.mdx');
@@ -129,7 +130,7 @@ function suites() {
         return vscode.workspace.openTextDocument(uri);
       });
       await vscode.workspace.getConfiguration('markdown', document).update('copyFiles.destination', { '/second.mdx': '/assets/${fileName}' }, vscode.ConfigurationTarget.Workspace);
-      assert.equal(desiredDestination(document, 'input.png').path, vscode.Uri.joinPath(second, 'assets/input.png').path);
+      assert.equal(comparablePath(desiredDestination(document, 'input.png')), comparablePath(vscode.Uri.joinPath(second, 'assets/input.png')));
       await vscode.workspace.fs.delete(document.uri);
     });
     test('language isolation, alternate MDX ids and retained language service identity', async () => {

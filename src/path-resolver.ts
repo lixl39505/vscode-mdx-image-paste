@@ -10,7 +10,8 @@ export function desiredDestination(document: vscode.TextDocument, name: string):
   const config = getCopyFileConfiguration(document);
   for (const [glob, destination] of Object.entries(config.destination)) {
     for (const pattern of parseGlob(glob)) {
-      if (picomatch.isMatch(document.uri.path, pattern, { dot: true })) {
+      const normalizeDrive = (value: string) => value.replace(/^\/[A-Z]:/, drive => drive.toLowerCase());
+      if (picomatch.isMatch(normalizeDrive(document.uri.path), normalizeDrive(pattern), { dot: true })) {
         return resolveCopyDestination(document.uri, name, destination,
           uri => vscode.workspace.getWorkspaceFolder(uri)?.uri);
       }
